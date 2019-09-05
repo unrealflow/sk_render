@@ -11,7 +11,20 @@ bl_info = {
     "tracker_url": "",
     "category": "Render",
     }
-import bpy
+# import bpy
+# from . import core
+import os
+if "bpy" in locals():
+    if bpy.app.version < (2, 71, 0):
+        import imp as importlib
+    else:
+        import importlib
+    importlib.reload(core)
+
+else:
+    import bpy
+    import logging
+    from . import core
 
 
 class SkRender(bpy.types.Operator):
@@ -22,7 +35,16 @@ class SkRender(bpy.types.Operator):
 
     total: bpy.props.IntProperty(name="Steps", default=2, min=1, max=100)
 
+    def __init__(self):
+        self.loader=core.data.Loader()
     def execute(self, context):
+        self.loader.load(context)
+        for m in self.loader.scene:
+            print("\t-\t-\t-\t-\t-\t-\t-")
+            print(m.Trans)
+            print(m.Mat)
+            print(len(m.Vertices).__str__()+"\t"+len(m.Indices).__str__())
+            print((m.Indices))
         return {'FINISHED'}
 
 
