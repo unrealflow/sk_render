@@ -1,6 +1,7 @@
 import bpy
 import ctypes
 import os
+from math import *
 def ToCList_Float(src,len):
     dst=(ctypes.c_float*len)()
     for i in range(0,len):
@@ -57,10 +58,22 @@ class CMesh(ctypes.Structure):
         ("T",ctypes.POINTER(Transform)),
         ("M",ctypes.POINTER(Material))
     ]
+class CLight(ctypes.Structure):
+     _fields_=[
+        ("type",ctypes.c_float),
+        ("pos",ctypes.c_float*3),
+        ("dir",ctypes.c_float*3),
+        ("color",ctypes.c_float*3),
+        ("radius",ctypes.c_float),
+        ("atten",ctypes.c_float)
+    ]
+
 class CScene(ctypes.Structure):
     _fields_=[
         ("meshes",ctypes.POINTER(CMesh)),
-        ("nums",ctypes.c_uint32)
+        ("nums",ctypes.c_uint32),
+        ("lights",ctypes.POINTER(CLight)),
+        ("lightCount",ctypes.c_uint32)
     ]
 
 class Mesh(ctypes.Structure): 
@@ -90,7 +103,8 @@ class Loader(object):
         print("test")
     
     def load(self,context):
-        self.scene=[]
+        self.meshes=[]
+        self.lights=[]
         for o in bpy.data.objects:
             if(o.type=='MESH'):
                 # for v in o.data.vertices:
@@ -119,14 +133,44 @@ class Loader(object):
                         _mesh.Vertices+=list(o.data.vertices[index].normal)
                         _mesh.Vertices+=list(o.data.uv_layers["UVMap"].data[i].uv)
                         i+=1
-                self.scene.append(_mesh)
+                self.meshes.append(_mesh)
                 print("\n")
+            if(o.type=='LIGHT'):
+                _light=CLight()
+                _light.pos=ToCList_Float(o.location,3)
+                _light.color=ToCList_Float(o.data.color*o.data.energy,3)
+                if(o.data.type=='POINT'):
+                    _light.type=0.0
+                    _light.radius=o.data.shadow_soft_size
+                    _light.atten=1.5
+                elif(o.data.type=='SUN'):
+                    _rot=o.rotation_euler
+                    _light.type=1.0
+                    # (0,0,-1)
+                    x0=0.0
+                    y0=-1.0*sin(_rot.x)
+                    z0=-1.0*cos(_rot.x)
+
+                    x1=x0*cos(_rot.y)+z0*sin(_rot.y)
+                    y1=y0
+                    z1=z0*cos(_rot.y)-x0*sin(_rot.y)
+
+                    _light.dir[0]=x1*cos(_rot.z)-y1*sin(_rot.z)
+                    _light.dir[1]=y1*cos(_rot.z)+x1*sin(_rot.z)
+                    _light.dir[2]=z1
+                    
+                else:
+                    _light.type=2.0
+                self.lights.append(_light)
+                
+                
+
 
 
 _l=Loader()
 _l.load(0)
 
-# for m in _l.scene:
+# for m in _l.meshes:
 #     print("\t-\t-\t-\t-\t-\t-\t-")
 #     print(m.Trans)
 #     print(m.Mat)
@@ -139,15 +183,24 @@ print(os.getcwd())
 ll = ctypes.cdll.LoadLibrary   
 
 _c_scene_=CScene()
-_len=len(_l.scene)
-print(_len)
+
+_len=len(_l.meshes)
 _c_scene_.meshes=(CMesh*_len)()
 _c_scene_.nums=_len
 for i in range(0,_len):
-    _c_scene_.meshes[i]=_l.scene[i].ToCMesh()
+    _c_scene_.meshes[i]=_l.meshes[i].ToCMesh()
+
+_len=len(_l.lights)
+print("---------"+_len.__str__())
+_c_scene_.lights=(CLight*_len)()
+_c_scene_.lightCount=_len
+for i in range(0,_len):
+    _c_scene_.lights[i]=_l.lights[i]
+
+
 
 def Render():
-    lib=ll("E:\\ProgramData\\SkRender\\Bin\\SkRender.dll")
+    lib=ll("E:\\ProgramData\\LearnVulkan\\bin\\SkEngine.dll")
     fun=lib.render
     fun(ctypes.byref(_c_scene_))
 
