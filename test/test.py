@@ -128,11 +128,18 @@ class Loader(object):
                         _mesh.Indices+=[i,i+2,i+3]
                     else:
                         _mesh.Indices+=[i,i+1,i+2]
-                    for index in p.vertices:
-                        _mesh.Vertices+=list(o.data.vertices[index].co)
-                        _mesh.Vertices+=list(o.data.vertices[index].normal)
-                        _mesh.Vertices+=list(o.data.uv_layers["UVMap"].data[i].uv)
-                        i+=1
+                    if(p.use_smooth):
+                        for index in p.vertices:
+                            _mesh.Vertices+=list(o.data.vertices[index].co)
+                            _mesh.Vertices+=list(o.data.vertices[index].normal)
+                            _mesh.Vertices+=list(o.data.uv_layers["UVMap"].data[i].uv)
+                            i+=1
+                    else:
+                        for index in p.vertices:
+                            _mesh.Vertices+=list(o.data.vertices[index].co)
+                            _mesh.Vertices+=list(p.normal)
+                            _mesh.Vertices+=list(o.data.uv_layers["UVMap"].data[i].uv)
+                            i+=1
                 self.meshes.append(_mesh)
                 print("\n")
             if(o.type=='LIGHT'):
@@ -142,7 +149,7 @@ class Loader(object):
                 if(o.data.type=='POINT'):
                     _light.type=0.0
                     _light.radius=o.data.shadow_soft_size
-                    _light.atten=1.5
+                    _light.atten=2.0
                 elif(o.data.type=='SUN'):
                     _rot=o.rotation_euler
                     _light.type=1.0
