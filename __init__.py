@@ -39,12 +39,13 @@ class SkRender(bpy.types.Operator):
         self.loader=core.data.Loader()
     def execute(self, context):
         self.loader.load(context)
-        for m in self.loader.scene:
-            print("\t-\t-\t-\t-\t-\t-\t-")
-            print(m.Trans)
-            print(m.Mat)
-            print(len(m.Vertices).__str__()+"\t"+len(m.Indices).__str__())
-            print((m.Indices))
+        self.loader.render()
+        # for m in self.loader.scene:
+        #     print("\t-\t-\t-\t-\t-\t-\t-")
+        #     print(m.Trans)
+        #     print(m.Mat)
+        #     print(len(m.Vertices).__str__()+"\t"+len(m.Indices).__str__())
+        #     print((m.Indices))
         return {'FINISHED'}
 
 

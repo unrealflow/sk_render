@@ -169,47 +169,40 @@ class Loader(object):
                 else:
                     _light.type=2.0
                 self.lights.append(_light)
-                
+
+    def render(self):
+        print(os.getcwd())
+        ll = ctypes.cdll.LoadLibrary   
+
+        _c_scene_=CScene()
+
+        _len=len(self.meshes)
+        _c_scene_.meshes=(CMesh*_len)()
+        _c_scene_.nums=_len
+        for i in range(0,_len):
+            _c_scene_.meshes[i]=self.meshes[i].ToCMesh()
+
+        _len=len(self.lights)
+        print("---------"+_len.__str__())
+        _c_scene_.lights=(CLight*_len)()
+        _c_scene_.lightCount=_len
+        for i in range(0,_len):
+            _c_scene_.lights[i]=self.lights[i]
+
+        lib=ll("E:\\ProgramData\\LearnVulkan\\bin\\SkEngine.dll")
+        fun=lib.render
+        fun(ctypes.byref(_c_scene_))
+        print("Render Finished")         
                 
 
 
 
 _l=Loader()
 _l.load(0)
-
+_l.render()
 # for m in _l.meshes:
 #     print("\t-\t-\t-\t-\t-\t-\t-")
 #     print(m.Trans)
 #     print(m.Mat)
 #     print(len(m.Vertices).__str__()+"\t"+len(m.Indices).__str__())
 #     print((m.Indices))
-
-
-
-print(os.getcwd())
-ll = ctypes.cdll.LoadLibrary   
-
-_c_scene_=CScene()
-
-_len=len(_l.meshes)
-_c_scene_.meshes=(CMesh*_len)()
-_c_scene_.nums=_len
-for i in range(0,_len):
-    _c_scene_.meshes[i]=_l.meshes[i].ToCMesh()
-
-_len=len(_l.lights)
-print("---------"+_len.__str__())
-_c_scene_.lights=(CLight*_len)()
-_c_scene_.lightCount=_len
-for i in range(0,_len):
-    _c_scene_.lights[i]=_l.lights[i]
-
-
-
-def Render():
-    lib=ll("E:\\ProgramData\\LearnVulkan\\bin\\SkEngine.dll")
-    fun=lib.render
-    fun(ctypes.byref(_c_scene_))
-
-Render()
-print("OK") 
