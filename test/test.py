@@ -27,14 +27,16 @@ class Material(ctypes.Structure):
         ("baseColor",ctypes.c_float*4),
         ("metallic",ctypes.c_float),
         ("roughness",ctypes.c_float),
+        ("transmission",ctypes.c_float),
     ]
     def __init__(self):
         self.baseColor=ToCList_Float([0.8,0.8,0.8,1.0],4)
         self.metallic=0.0
         self.roughness=0.5
+        self.transmission=0.0
     
     def __str__(self):
-        return "[{0:.3f},{1:.3f},{2:.3f},{3:.3f}]\t{4:.3f}\t{5:.3f}".format(self.baseColor[0],self.baseColor[1],self.baseColor[2],self.baseColor[3],self.metallic,self.roughness)
+        return "[{0:.3f},{1:.3f},{2:.3f},{3:.3f}]\t{4:.3f}\t{5:.3f}\t{6:.3f}".format(self.baseColor[0],self.baseColor[1],self.baseColor[2],self.baseColor[3],self.metallic,self.roughness,self.transmission)
 
 class Transform(ctypes.Structure):
     _fields_=[
@@ -117,7 +119,8 @@ class Loader(object):
                 _mesh.Mat.baseColor=ToCList_Float(_tmp_mat_.inputs[0].default_value,4)
                 _mesh.Mat.metallic=_tmp_mat_.inputs[4].default_value
                 _mesh.Mat.roughness=_tmp_mat_.inputs[7].default_value
-
+                _mesh.Mat.transmission=_tmp_mat_.inputs[15].default_value
+                print("py:"+_mesh.Mat.transmission.__str__())
                 if(len(o.data.uv_layers["UVMap"].data)==0):
                     print(o.name+" no UV ")
                     break
@@ -193,7 +196,7 @@ class Loader(object):
         fun=lib.render
         fun(ctypes.byref(_c_scene_))
         print("Render Finished")         
-                
+         
 
 
 
